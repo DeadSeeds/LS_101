@@ -1,0 +1,5 @@
+arr1[2][1][3]
+arr2[1][:third][0]
+arr3[2][:third][0][0]
+hsh1['b'][1]
+hsh2[:third].keys[0]
