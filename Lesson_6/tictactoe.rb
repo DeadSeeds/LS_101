@@ -1,3 +1,5 @@
+require 'pry'
+
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -5,6 +7,7 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                 [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
                 [[1, 5, 9], [3, 5, 7]]              # diagonals
 PLAYER_ONE = 'choose'
+WINNING_SCORE = 5
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -23,7 +26,7 @@ def joinor(arr, symbol = ', ', last_word = 'or')
 end
 
 def display_board(brd)
-  system 'clear'
+  system('clear') || system('cls')
   puts "You are #{PLAYER_MARKER}.  Computer is #{COMPUTER_MARKER}."
   puts ""
   puts "     |     |"
@@ -120,19 +123,27 @@ def detect_winner(brd)
   nil
 end
 
-def place_piece!(brd, player)
-  if player == 'Player'
+def place_piece!(brd, current_player)
+  if current_player == 'Player'
     player_places_piece!(brd)
   else
     computer_places_piece!(brd)
   end
 end
 
-def next_player(player)
-  if player == 'Player'
+def next_player(current_player)
+  if current_player == 'Player'
     'Computer'
   else
     'Player'
+  end
+end
+
+def play_again?(answer)
+  if answer == 'y'
+    true
+  else
+    false
   end
 end
 
@@ -140,16 +151,15 @@ def determine_order
   prompt "Welcome to Tic Tac Toe!"
   prompt "Who goes first? (type 'p' for you or 'c' for computer..." \
   " any other input will be a random choice)"
-  person = gets.chomp
+  person = gets.chomp.downcase
 
-  choice = if person.downcase.start_with?('p')
-             'Player'
-           elsif person.downcase.start_with?('c')
-             'Computer'
-           else
-             ['Player', 'Computer'].sample
-           end
-  choice.to_s
+  if person == 'p'
+    'Player'
+  elsif person == 'c'
+    'Computer'
+  else
+    ['Player', 'Computer'].sample
+  end
 end
 
 def assign_player_one
@@ -161,7 +171,7 @@ end
 loop do
   player_score = 0
   computer_score = 0
-  system 'clear'
+  system('clear') || system('cls')
   current_player = assign_player_one
 
   loop do
@@ -178,32 +188,34 @@ loop do
 
     if someone_won?(board)
       prompt "#{detect_winner(board)} won!"
-      if detect_winner(board).to_s.start_with?('P')
+      if detect_winner(board) == 'Player'
         player_score += 1
-      elsif detect_winner(board).to_s.start_with?('C')
+      elsif detect_winner(board) == 'Computer'
         computer_score += 1
-      else
-        next
       end
     else
       prompt "It's a tie!"
     end
 
-    if player_score == 5
+    if player_score == WINNING_SCORE
       prompt "You won best of five!"
       break
-    elsif computer_score == 5
+    elsif computer_score == WINNING_SCORE
       prompt "Computer won best of five.  Better luck next time!"
       break
     end
 
     prompt "We play to best of five. Current score: player - #{player_score}," \
-    " computer - #{computer_score}. Play again? ('y' to continue)"
-    answer = gets.chomp
-    break unless answer.downcase.start_with?('y')
+    " computer - #{computer_score}. Press any key to continue..."
+    gets.chomp
   end
 
-  break if player_score || computer_score == 5
+  if player_score == WINNING_SCORE || computer_score == WINNING_SCORE
+    prompt "Would you like to play again? (y or n)"
+    game_answer = gets.chomp
+
+    break unless play_again?(game_answer)
+  end
 end
 
 prompt 'Thanks for playing Tic Tac Toe.  Goodbye!'
