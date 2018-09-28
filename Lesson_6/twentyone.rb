@@ -62,12 +62,7 @@ end
 def play_again?
   prompt "Play again? (y or n)"
   answer = gets.chomp.downcase
-  if answer == 'y'
-    "Ok."
-  else
-    prompt "See ya!"
-    false
-  end
+  answer == 'y'
 end
 
 def deal_cards(deck)
