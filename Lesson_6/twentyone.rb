@@ -1,5 +1,3 @@
-require 'pry'
-
 WINNING_HAND = 21
 COMPUTER_STANDS = 16
 
