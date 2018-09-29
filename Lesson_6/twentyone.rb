@@ -1,5 +1,3 @@
-require 'pry'
-
 WINNING_HAND = 21
 COMPUTER_STANDS = 16
 SUITS = ['H', 'D', 'S', 'C']
@@ -61,17 +59,6 @@ def detect_winner(player_score, computer_score)
     'C'
   end
 end
-
-# def determine_winner(winner, player_wins, computer_wins, draws)
-#   binding.pry
-#   if winner.start_with?('P')
-#     player_wins += 1
-#   elsif winner.start_with?('C')
-#     computer_wins += 1
-#   else
-#     draws += 1
-#   end
-# end
 
 def player_turn(deck, player_cards, player_score)
   loop do
@@ -171,18 +158,31 @@ def yes_or_no?
   answer == 'y'
 end
 
+def update_score(winner, score)
+  if winner.start_with?('P')
+    score[:player_wins] += 1
+  elsif winner.start_with?('C')
+    score[:computer_wins] += 1
+  else
+    score[:draws] += 1
+  end
+end
+
 loop do
   clear_screen
   prompt "Welcome to Twenty One!"
   prompt "Ready to begin? (y or n)"
   break unless yes_or_no?
-  player_wins = 0
-  computer_wins = 0
-  draws = 0
+
+  score = {
+  player_wins: 0,
+  computer_wins: 0,
+  draws: 0
+  }
 
   loop do
     clear_screen
-    puts "Player wins: #{player_wins}  Computer wins: #{computer_wins}  Draws: #{draws}"
+    puts "Player wins: #{score[:player_wins]}  Computer wins: #{score[:computer_wins]}  Draws: #{score[:draws]}"
     deck = initialize_deck
     player_cards = deal_cards(deck)
     player_score = total(player_cards)
@@ -197,15 +197,8 @@ loop do
     computer_final_score = computer_turn(deck, computer_cards, computer_score)
     final_score_banner(player_final_score, computer_final_score)
     winner = detect_winner(player_final_score, computer_final_score)
-    # determine_winner(winner, player_wins, computer_wins, draws)
+    update_score(winner, score)
 
-    if winner.start_with?('P')
-      player_wins += 1
-    elsif winner.start_with?('C')
-      computer_wins += 1
-    else
-      draws += 1
-    end
     prompt "Would you like to play again? (y or n)"
     break unless yes_or_no?
   end
