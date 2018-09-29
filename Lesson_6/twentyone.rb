@@ -1,68 +1,16 @@
+require 'pry'
+
 WINNING_HAND = 21
 COMPUTER_STANDS = 16
+SUITS = ['H', 'D', 'S', 'C']
+VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 def prompt(message)
   puts "=> #{message}"
 end
 
-def initialize_suit
-  deck = []
-  13.times do |num|
-    deck << [num + 1]
-    deck[num] << ' '
-  end
-  deck.each do |card|
-    card.reverse!
-    case card[1]
-    when 0..9
-      card[1] = (card[1] + 1).to_s
-    when 10
-      card[1] = 'J'
-    when 11
-      card[1] = 'Q'
-    when 12
-      card[1] = 'K'
-    when 13
-      card[1] = 'A'
-    end
-  end
-  deck
-end
-
 def initialize_deck
-  hearts_deck = initialize_suit
-  diamonds_deck = initialize_suit
-  spades_deck = initialize_suit
-  clubs_deck = initialize_suit
-  final_deck = hearts_deck + diamonds_deck + spades_deck + clubs_deck
-
-  [hearts_deck, diamonds_deck, spades_deck, clubs_deck].each do |deck|
-    case deck
-    when hearts_deck
-      hearts_deck.each do |card|
-        card[0] = 'H'
-      end
-    when diamonds_deck
-      diamonds_deck.each do |card|
-        card[0] = 'D'
-      end
-    when spades_deck
-      spades_deck.each do |card|
-        card[0] = 'S'
-      end
-    when clubs_deck
-      clubs_deck.each do |card|
-        card[0] = 'C'
-      end
-    end
-  end
-  final_deck.shuffle
-end
-
-def play_again?
-  prompt "Play again? (y or n)"
-  answer = gets.chomp.downcase
-  answer == 'y'
+  SUITS.product(VALUES).shuffle
 end
 
 def deal_cards(deck)
@@ -75,13 +23,13 @@ def total(cards)
 
   sum = 0
   values.each do |value|
-    if value == "A"
-      sum += 11
-    elsif value.to_i == 0 # J, Q, K
-      sum += 10
-    else
-      sum += value.to_i
-    end
+    sum = if value == "A"
+            sum += 11
+          elsif value.to_i == 0 # J, Q, K
+            sum += 10
+          else
+            sum += value.to_i
+          end
   end
   # correct for Aces
   values.select { |value| value == "A" }.count.times do
@@ -94,7 +42,7 @@ def busted?(score)
   score > WINNING_HAND
 end
 
-def who_won?(player_score, computer_score)
+def detect_winner(player_score, computer_score)
   if player_score.to_i <= WINNING_HAND && player_score.to_i > computer_score.to_i
     prompt "You won!"
     'P'
@@ -114,19 +62,32 @@ def who_won?(player_score, computer_score)
   end
 end
 
+# def determine_winner(winner, player_wins, computer_wins, draws)
+#   binding.pry
+#   if winner.start_with?('P')
+#     player_wins += 1
+#   elsif winner.start_with?('C')
+#     computer_wins += 1
+#   else
+#     draws += 1
+#   end
+# end
+
 def player_turn(deck, player_cards, player_score)
   loop do
     prompt "Hit or Stay?"
     answer = gets.chomp.downcase
-    if answer == 'stay' || busted?(player_score)
+    if answer == 'stay' || answer == 's' || busted?(player_score)
       display_player_stats(player_cards, player_score)
       player_score = total(player_cards)
       break
-    elsif answer == 'hit'
+    elsif answer == 'hit' || answer == 'h'
       player_cards << deck.shift
       player_score = total(player_cards)
       display_player_stats(player_cards, player_score)
       break if busted?(player_score)
+    else
+      prompt "Sorry, you must enter 'hit' or 'stay'."
     end
   end
   player_score = total(player_cards)
@@ -183,18 +144,44 @@ def display_computer_stats(computer_cards, computer_score, computer_showing_card
   puts ""
 end
 
-loop do
+def clear_screen
   system('clear') || system('cls')
+end
+
+def final_score_banner(player_final_score, computer_final_score)
+  puts "------------------------------------------------------"
+  puts "Your final score is #{player_final_score}.  Computer's final score is #{computer_final_score}."
+  puts "------------------------------------------------------"
+end
+
+def yes_or_no?
+  answer = ''
+  loop do
+  response = gets.chomp
+    if response == 'y' || response == 'yes'
+      answer = 'y'
+      break
+    elsif response == 'n' || response == 'no'
+      answer = 'n'
+      break
+    else
+      prompt "Sorry, you must enter y or n.  Please try again."
+    end
+  end
+  answer == 'y'
+end
+
+loop do
+  clear_screen
   prompt "Welcome to Twenty One!"
   prompt "Ready to begin? (y or n)"
-  answer = gets.chomp
-  break if answer == 'n'
+  break unless yes_or_no?
   player_wins = 0
   computer_wins = 0
   draws = 0
 
   loop do
-    system('clear') || system('cls')
+    clear_screen
     puts "Player wins: #{player_wins}  Computer wins: #{computer_wins}  Draws: #{draws}"
     deck = initialize_deck
     player_cards = deal_cards(deck)
@@ -208,8 +195,9 @@ loop do
     player_final_score = player_turn(deck, player_cards, player_score)
 
     computer_final_score = computer_turn(deck, computer_cards, computer_score)
-    prompt "Computer's final score is: #{computer_final_score}"
-    winner = who_won?(player_final_score, computer_final_score)
+    final_score_banner(player_final_score, computer_final_score)
+    winner = detect_winner(player_final_score, computer_final_score)
+    # determine_winner(winner, player_wins, computer_wins, draws)
 
     if winner.start_with?('P')
       player_wins += 1
@@ -218,8 +206,8 @@ loop do
     else
       draws += 1
     end
-
-    break unless play_again?
+    prompt "Would you like to play again? (y or n)"
+    break unless yes_or_no?
   end
   break
 end
